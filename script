@@ -1,87 +1,133 @@
-let url = "datas.json";
-let adding_details = document.querySelector("#adding_details");
+let url = "https://www.melivecode.com/api/users";
+let display_data = document.querySelector("#display_data");
 let first_name = document.querySelector("#first_name");
 let last_name = document.querySelector("#last_name");
 let email_input = document.querySelector("#email_input");
-let submit_btn = document.querySelector("#submit_btn");
-let delete_btn = document.querySelector("#deleteBtn");
-let edit_btn = document.querySelector("#edit_btn");
+let photo_input = document.querySelector("#photo_input");
+let submit_btn = document.querySelector("#submit");
+// let id = document.querySelector("#submit");
 
+let firstName = first_name.value;
+let lastName = last_name.value;
+let emailInput = email_input.value;
+let photoLink = photo_input.value;
+
+// display fetching datas
 async function getMethod() {
   try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (!response.ok) throw new Error("file Can't Get");
+    let response = await fetch(url);
+    let data = await response.json();
+    display_data.innerHTML = "";
+    if (!response.ok) throw Error("file not get");
     else {
-      data.map(({ fname, lname, username, id }) => {
-        adding_details.innerHTML += `<tr>
+      data.forEach(({ fname, lname, username, avatar, id }) => {
+        display_data.innerHTML += ` <tr id="${id}">
         <th scope="row">${id}</th>
+        <td><img src="${avatar}" alt="" /></td>
         <td>${fname}</td>
         <td>${lname}</td>
         <td>${username}</td>
-        <td>
-          <i class="bi bi-pencil-square" id="edit_btn"onclick="editEle(${id})" ></i>
-
-          <i class="bi bi-trash3 ms-5" id="deleteBtn" onclick="deleteEle(${id})"></i>
-        </td>
+        <td><i class="bi bi-pencil-square" onclick="editElement(${id})"></i></td>
+        <td><i class="bi bi-trash3" onclick="deleteElement(${id})"></i></td>
       </tr>`;
       });
     }
   } catch (err) {
-    console.dir(err);
+    console.log(err.message);
   }
 }
 getMethod();
 
+//post method
+
 submit_btn.addEventListener("click", function (event) {
   event.preventDefault();
-  let firstName = first_name.value;
-  let lastName = last_name.value;
-  let emailValue = email_input.value;
 
   async function postMethod() {
     try {
-      const response = await fetch(url, {
+      let response = await fetch(`${url}/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, emailValue }),
+        body: JSON.stringify({
+          fname: first_name.value,
+          lname: last_name.value,
+          username: email_input.value,
+          password: 1234,
+          email: email_input.value,
+          avatar: photo_input.value,
+        }),
       });
-
-      if (!response.ok) throw new Error("post can't send");
+      if (!response.ok) throw Error("file not post");
       else {
-        const data = await response.json();
         getMethod();
+        first_name.value = "";
+        last_name.value = "";
+        email_input.value = "";
+        photo_input.value = "";
       }
     } catch (err) {
-      console.dir(err.message);
+      console.log(err.message);
     }
   }
   postMethod();
 });
 
-async function deleteEle(id) {
+// Deleted Method
+async function deleteElement(id) {
   try {
-    const response = await fetch(`${url}/${id}`, {
+    let response = await fetch(`${url}/delete`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({
+        id: id,
+      }),
     });
-
-    if (!response.ok) throw new Error("can't delete");
+    if (!response.ok) throw Error("file not post");
     else {
       getMethod();
     }
   } catch (err) {
-    console.dir(err.message);
+    console.log(err.message);
   }
 }
 
-async function editEle(id) {
-  let response = await fetch(`${url}/${id}`);
-  let data = await response.json();
+// edit Method
+async function editElement(id) {
+  // retrive data
+  try {
+    let response = await fetch(`${url}/${id}`);
+    let editData = await response.json();
+    if (!response.ok) throw new Error("data not get");
+    else {
+      first_name.value = editData.user.fname;
+      last_name.value = editData.user.lname;
+      email_input.value = editData.user.username;
+      photo_input.value = editData.user.avatar;
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
 
-  let fname = data.fname;
-  let lname = data.lname;
-  first_name.value = fname;
-  console.log(id);
+  // update New values
+  try {
+    let response = await fetch(`${url}/update`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: id,
+        fname: first_name.value,
+        lname: last_name.value,
+        username: email_input.value,
+        password: 1234,
+        email: email_input.value,
+        avatar: photo_input.value,
+      }),
+    });
+    if (!response.ok) throw new Error("data not Update");
+    else {
+      getMethod();
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
 }
