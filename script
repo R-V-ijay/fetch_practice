@@ -1,0 +1,87 @@
+let url = "datas.json";
+let adding_details = document.querySelector("#adding_details");
+let first_name = document.querySelector("#first_name");
+let last_name = document.querySelector("#last_name");
+let email_input = document.querySelector("#email_input");
+let submit_btn = document.querySelector("#submit_btn");
+let delete_btn = document.querySelector("#deleteBtn");
+let edit_btn = document.querySelector("#edit_btn");
+
+async function getMethod() {
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (!response.ok) throw new Error("file Can't Get");
+    else {
+      data.map(({ fname, lname, username, id }) => {
+        adding_details.innerHTML += `<tr>
+        <th scope="row">${id}</th>
+        <td>${fname}</td>
+        <td>${lname}</td>
+        <td>${username}</td>
+        <td>
+          <i class="bi bi-pencil-square" id="edit_btn"onclick="editEle(${id})" ></i>
+
+          <i class="bi bi-trash3 ms-5" id="deleteBtn" onclick="deleteEle(${id})"></i>
+        </td>
+      </tr>`;
+      });
+    }
+  } catch (err) {
+    console.dir(err);
+  }
+}
+getMethod();
+
+submit_btn.addEventListener("click", function (event) {
+  event.preventDefault();
+  let firstName = first_name.value;
+  let lastName = last_name.value;
+  let emailValue = email_input.value;
+
+  async function postMethod() {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, emailValue }),
+      });
+
+      if (!response.ok) throw new Error("post can't send");
+      else {
+        const data = await response.json();
+        getMethod();
+      }
+    } catch (err) {
+      console.dir(err.message);
+    }
+  }
+  postMethod();
+});
+
+async function deleteEle(id) {
+  try {
+    const response = await fetch(`${url}/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+
+    if (!response.ok) throw new Error("can't delete");
+    else {
+      getMethod();
+    }
+  } catch (err) {
+    console.dir(err.message);
+  }
+}
+
+async function editEle(id) {
+  let response = await fetch(`${url}/${id}`);
+  let data = await response.json();
+
+  let fname = data.fname;
+  let lname = data.lname;
+  first_name.value = fname;
+  console.log(id);
+}
